@@ -25,8 +25,29 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Student Housing App',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF2196F3),
+          brightness: Brightness.light,
+        ),
+        appBarTheme: const AppBarTheme(
+          centerTitle: false,
+          elevation: 0,
+        ),
+        cardTheme: CardTheme(
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+        navigationBarTheme: NavigationBarThemeData(
+          elevation: 3,
+          backgroundColor: Colors.white,
+          indicatorColor: Colors.blue.withOpacity(0.2),
+          labelTextStyle: MaterialStateProperty.all(
+            const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+          ),
+        ),
       ),
       initialRoute: '/login',
       routes: {
