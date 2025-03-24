@@ -1,6 +1,41 @@
-# Ứng dụng Tìm trọ sinh viên
+# App Tìm Trọ Sinh Viên
 
-Ứng dụng mobile giúp sinh viên tìm kiếm và quản lý phòng trọ, kết nối với chủ trọ.
+Ứng dụng giúp sinh viên tìm kiếm phòng trọ và chủ trọ đăng tin cho thuê phòng một cách dễ dàng.
+
+## Tính năng chính
+
+- **Đăng ký và đăng nhập**: Hỗ trợ đăng ký với các vai trò khác nhau (sinh viên, chủ trọ)
+- **Quản lý người dùng**: Admin có thể quản lý tài khoản người dùng
+- **Đăng tin phòng trọ**: Chủ trọ có thể đăng thông tin phòng trọ
+- **Tìm kiếm phòng trọ**: Sinh viên có thể tìm kiếm phòng trọ với nhiều tiêu chí
+- **Đánh giá và bình luận**: Đánh giá và bình luận về nhà trọ
+
+## Công nghệ sử dụng
+
+- **Frontend**: Flutter
+- **Backend**: Node.js, Express
+- **Database**: MySQL
+
+## Cài đặt
+
+### Backend
+
+```bash
+cd backend
+npm install
+npm start
+```
+
+### Frontend
+
+```bash
+flutter pub get
+flutter run
+```
+
+## Tác giả
+
+Nhóm Sinh Viên
 
 ## Cập nhật mới - Ver 1.2
 
@@ -14,98 +49,6 @@
 - Cập nhật API quản lý người dùng hỗ trợ các trường mới: status, reputation_score
 - Bổ sung validation chặt chẽ cho dữ liệu đầu vào
 - Trả về thông tin người dùng đã cập nhật sau khi cập nhật thành công
-
-## Tính năng chính
-
-### Xác thực người dùng
-- Đăng nhập bằng email hoặc họ tên
-- Đăng ký tài khoản với các vai trò: Sinh viên, Chủ trọ
-- Đăng xuất và quản lý phiên đăng nhập
-
-### Giao diện theo vai trò
-
-#### Sinh viên
-- Tìm kiếm phòng trọ
-- Xem thông tin chi tiết phòng
-- Đặt phòng và quản lý đặt phòng
-- Đánh giá và bình luận
-- Chia sẻ tài liệu học tập
-
-#### Chủ trọ
-- Quản lý nhà trọ và phòng trọ
-- Xem và xử lý yêu cầu đặt phòng
-- Quản lý thông tin người thuê
-- Thống kê và báo cáo
-
-#### Quản trị viên
-- Quản lý người dùng
-- Quản lý nhà trọ
-- Xem báo cáo và thống kê
-- Xử lý khiếu nại
-
-## Công nghệ sử dụng
-
-### Frontend
-- Flutter SDK
-- Provider cho state management
-- HTTP package cho API calls
-- Animation và hiệu ứng chuyển động
-
-### Backend
-- Node.js với Express
-- MySQL database
-- JWT cho xác thực
-- API RESTful
-
-## Cài đặt và Chạy
-
-### Yêu cầu
-- Flutter SDK
-- Node.js và npm
-- MySQL
-
-### Backend
-1. Di chuyển vào thư mục backend:
-```bash
-cd backend
-```
-
-2. Cài đặt dependencies:
-```bash
-npm install
-```
-
-3. Tạo file .env và cấu hình:
-```env
-DB_HOST=localhost
-DB_USER=root
-DB_PASS=your_password
-DB_NAME=tim_tro_sinh_vien
-JWT_SECRET=your_secret_key
-```
-
-4. Khởi tạo database:
-```bash
-mysql -u root -p < database.sql
-```
-
-5. Chạy server:
-```bash
-npm start
-```
-
-### Frontend
-1. Di chuyển vào thư mục gốc của dự án
-
-2. Cài đặt dependencies:
-```bash
-flutter pub get
-```
-
-3. Chạy ứng dụng:
-```bash
-flutter run
-```
 
 ## Cấu trúc thư mục
 

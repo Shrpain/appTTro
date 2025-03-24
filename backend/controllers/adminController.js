@@ -27,58 +27,10 @@ const getUsers = async (req, res) => {
   try {
     console.log('Đang lấy danh sách người dùng...');
     
-    // Kiểm tra kết nối database
-    try {
-      const [testConnection] = await db.query('SELECT 1');
-      console.log('Kết nối DB OK:', testConnection);
-    } catch (dbError) {
-      console.error('Lỗi kết nối DB:', dbError);
-      
-      // Trả về dữ liệu giả để tránh lỗi client
-      console.log('Trả về dữ liệu giả do lỗi kết nối DB');
-      return res.json({
-        success: true,
-        message: 'Dữ liệu giả (DB không kết nối được)',
-        users: [
-          {
-            id: 1, 
-            fullname: 'Admin Test',
-            email: 'admin@gmail.com',
-            phone: '0123456789',
-            role: 'admin',
-            reputation_score: 5,
-            avatar: 'default_avatar.jpg',
-            created_at: new Date().toISOString()
-          },
-          {
-            id: 2, 
-            fullname: 'Sinh Viên Test',
-            email: 'student@gmail.com',
-            phone: '0123456788',
-            role: 'student',
-            reputation_score: 4,
-            avatar: 'default_avatar.jpg',
-            created_at: new Date().toISOString()
-          },
-          {
-            id: 3, 
-            fullname: 'Chủ Trọ Test',
-            email: 'owner@gmail.com',
-            phone: '0123456787',
-            role: 'owner',
-            reputation_score: 4.5,
-            avatar: 'default_avatar.jpg',
-            created_at: new Date().toISOString()
-          }
-        ],
-        total: 3
-      });
-    }
-    
     // Thử lấy danh sách users
     console.log('Đang query users...');
     const [users] = await db.execute(
-      'SELECT id, fullname, email, phone, role, reputation_score, avatar, created_at FROM users'
+      'SELECT id, fullname, email, phone, role, reputation_score, avatar, status, created_at FROM users'
     );
 
     console.log(`Đã lấy ${users.length} người dùng`);
@@ -235,11 +187,11 @@ const updateUser = async (req, res) => {
   const userId = req.params.id;
 
   if (!userId || isNaN(userId)) {
-    return res.status(400).json({ success: false, message: 'Invalid user ID' });
+    return res.status(400).json({ success: false, message: 'ID người dùng không hợp lệ' });
   }
 
   try {
-    const { fullname, email, phone, password, role, avatar, status, reputation_score } = req.body;
+    const { fullname, email, phone, password, role, status, reputation_score } = req.body;
     const bcrypt = require('bcryptjs');
 
     // Build update fields dynamically
@@ -252,106 +204,140 @@ const updateUser = async (req, res) => {
     }
 
     if (email) {
+      // Kiểm tra email hợp lệ
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Email không hợp lệ'
+        });
+      }
+
+      // Kiểm tra email đã tồn tại chưa (trừ chính user hiện tại)
+      const [existingUsers] = await db.execute(
+        'SELECT id FROM users WHERE email = ? AND id != ?',
+        [email, userId]
+      );
+
+      if (existingUsers.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Email đã được sử dụng'
+        });
+      }
+
       updateFields.push('email = ?');
       updateValues.push(email);
     }
 
     if (phone) {
+      // Kiểm tra số điện thoại đã tồn tại chưa (trừ chính user hiện tại)
+      const [existingPhones] = await db.execute(
+        'SELECT id FROM users WHERE phone = ? AND id != ?',
+        [phone, userId]
+      );
+
+      if (existingPhones.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Số điện thoại đã được sử dụng'
+        });
+      }
+
       updateFields.push('phone = ?');
       updateValues.push(phone);
     }
 
     if (password) {
-      const hashedPassword = await bcrypt.hash(password, 10);
+      // Mã hóa mật khẩu mới
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
       updateFields.push('password_hash = ?');
       updateValues.push(hashedPassword);
     }
 
     if (role) {
+      // Kiểm tra role hợp lệ
+      const validRoles = ['admin', 'student', 'owner'];
+      if (!validRoles.includes(role)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Vai trò không hợp lệ'
+        });
+      }
       updateFields.push('role = ?');
       updateValues.push(role);
     }
 
-    if (avatar) {
-      updateFields.push('avatar = ?');
-      updateValues.push(avatar);
-    }
-
-    // Thêm cập nhật cho trạng thái (status)
     if (status) {
-      // Kiểm tra tính hợp lệ của status
-      if (status !== 'active' && status !== 'blocked') {
+      // Kiểm tra status hợp lệ
+      const validStatuses = ['active', 'blocked'];
+      if (!validStatuses.includes(status)) {
         return res.status(400).json({
           success: false,
-          message: 'Status must be either "active" or "blocked"'
+          message: 'Trạng thái không hợp lệ'
         });
       }
       updateFields.push('status = ?');
       updateValues.push(status);
     }
 
-    // Thêm cập nhật cho điểm uy tín (reputation_score)
     if (reputation_score !== undefined) {
-      // Kiểm tra tính hợp lệ của reputation_score
+      // Kiểm tra điểm uy tín hợp lệ
       const score = parseFloat(reputation_score);
       if (isNaN(score) || score < 0 || score > 5) {
         return res.status(400).json({
           success: false,
-          message: 'Reputation score must be a number between 0 and 5'
+          message: 'Điểm uy tín phải từ 0 đến 5'
         });
       }
       updateFields.push('reputation_score = ?');
       updateValues.push(score);
     }
 
+    // Nếu không có trường nào được cập nhật
     if (updateFields.length === 0) {
-      return res.status(400).json({ success: false, message: 'No fields to update' });
+      return res.status(400).json({
+        success: false,
+        message: 'Không có thông tin nào được cập nhật'
+      });
     }
 
-    // Add user ID for WHERE clause
+    // Thêm userId vào mảng updateValues
     updateValues.push(userId);
 
-    const query = `
-      UPDATE users 
-      SET ${updateFields.join(', ')} 
-      WHERE id = ?
-    `;
+    // Thực hiện cập nhật
+    const [result] = await db.execute(
+      `UPDATE users SET ${updateFields.join(', ')} WHERE id = ?`,
+      updateValues
+    );
 
-    console.log('Update user query:', query, updateValues);
-
-    db.query(query, updateValues, (err, result) => {
-      if (err) {
-        console.error('Error updating user:', err);
-        return res.status(500).json({ success: false, message: 'Internal server error', error: err.message });
-      }
-
-      if (result.affectedRows === 0) {
-        return res.status(404).json({ success: false, message: 'User not found' });
-      }
-
-      // Truy vấn để lấy thông tin người dùng đã cập nhật
-      db.query('SELECT id, fullname, email, phone, role, avatar, status, reputation_score, created_at FROM users WHERE id = ?', [userId], (err, rows) => {
-        if (err) {
-          console.error('Error fetching updated user:', err);
-          return res.status(200).json({ 
-            success: true, 
-            message: 'User updated successfully',
-            // Vẫn trả về thành công nhưng không có chi tiết người dùng
-          });
-        }
-
-        const updatedUser = rows[0];
-        
-        return res.status(200).json({
-          success: true,
-          message: 'User updated successfully',
-          user: updatedUser
-        });
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy người dùng'
       });
+    }
+
+    // Lấy thông tin người dùng đã cập nhật
+    const [updatedUser] = await db.execute(
+      'SELECT id, fullname, email, phone, role, reputation_score, avatar, status, created_at FROM users WHERE id = ?',
+      [userId]
+    );
+
+    return res.json({
+      success: true,
+      message: 'Cập nhật thông tin người dùng thành công',
+      user: updatedUser[0]
     });
+
   } catch (error) {
-    console.error('Error in updateUser:', error);
-    res.status(500).json({ success: false, message: 'Internal server error', error: error.message });
+    console.error('Lỗi khi cập nhật người dùng:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Lỗi server, vui lòng thử lại sau',
+      error: error.message
+    });
   }
 };
 

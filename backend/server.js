@@ -12,6 +12,9 @@ const app = express();
 app.use(corsMiddleware);
 app.use(express.json());
 
+// Phục vụ file tĩnh từ thư mục uploads
+app.use('/uploads', express.static('uploads'));
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
