@@ -348,6 +348,157 @@ class _AdminUsersState extends State<AdminUsers> {
     }
   }
 
+  // Hàm cập nhật trạng thái người dùng nhanh chóng
+  Future<void> _updateUserStatus(dynamic user, String newStatus) async {
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final token = authProvider.token;
+
+      final response = await http.put(
+        Uri.parse('http://localhost:3001/api/admin/users/${user['id']}'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'status': newStatus,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success']) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                  'Đã ${newStatus == 'active' ? 'kích hoạt' : 'chặn'} tài khoản ${user['fullname']}'),
+              backgroundColor:
+                  newStatus == 'active' ? Colors.green : Colors.red,
+            ),
+          );
+          _loadUsers(); // Tải lại danh sách
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Lỗi: ${data['message']}')),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi: ${response.statusCode}')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Lỗi: $e')),
+      );
+    }
+  }
+
+  // Hàm cập nhật điểm uy tín nhanh chóng
+  Future<void> _updateUserReputation(
+      dynamic user, double newReputationScore) async {
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final token = authProvider.token;
+
+      final response = await http.put(
+        Uri.parse('http://localhost:3001/api/admin/users/${user['id']}'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'reputation_score': newReputationScore,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success']) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                  'Đã cập nhật điểm uy tín của ${user['fullname']} thành $newReputationScore'),
+              backgroundColor: Colors.blue,
+            ),
+          );
+          _loadUsers(); // Tải lại danh sách
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Lỗi: ${data['message']}')),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi: ${response.statusCode}')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Lỗi: $e')),
+      );
+    }
+  }
+
+  // Hàm hiển thị dialog để đánh giá nhanh
+  void _showRatingDialog(dynamic user) {
+    double currentRating = user['reputation_score'] != null
+        ? double.parse(user['reputation_score'].toString())
+        : 0.0;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Đánh giá ${user['fullname']}'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Điểm uy tín hiện tại:',
+              style: TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(5, (index) {
+                return IconButton(
+                  onPressed: () {
+                    currentRating = index + 1.0;
+                    Navigator.pop(context);
+                    _updateUserReputation(user, currentRating);
+                  },
+                  icon: Icon(
+                    index < currentRating.floor()
+                        ? Icons.star
+                        : (index < currentRating)
+                            ? Icons.star_half
+                            : Icons.star_border,
+                    color: Colors.amber,
+                    size: 36,
+                  ),
+                );
+              }),
+            ),
+            Text(
+              currentRating.toString(),
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.amber,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Hủy'),
+          ),
+        ],
+      ),
+    );
+  }
+
   // Hàm hiển thị dialog cập nhật thông tin người dùng
   void _showEditUserDialog(dynamic user) {
     final _editFormKey = GlobalKey<FormState>();
@@ -881,7 +1032,7 @@ class _AdminUsersState extends State<AdminUsers> {
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Icon(
+                      child: const Icon(
                         Icons.block,
                         color: Colors.red,
                         size: 16,
@@ -935,6 +1086,43 @@ class _AdminUsersState extends State<AdminUsers> {
                           ],
                         ),
                       ),
+                      const SizedBox(width: 8),
+                      // Hiển thị thẻ trạng thái
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: isActive
+                              ? Colors.green.withOpacity(0.1)
+                              : Colors.red.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isActive
+                                ? Colors.green.shade300
+                                : Colors.red.shade300,
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              isActive ? Icons.check_circle : Icons.block,
+                              size: 14,
+                              color: isActive ? Colors.green : Colors.red,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              isActive ? 'Hoạt động' : 'Bị chặn',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isActive ? Colors.green : Colors.red,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 4),
@@ -971,22 +1159,40 @@ class _AdminUsersState extends State<AdminUsers> {
                         ),
                       ),
                       const Spacer(),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.star,
-                            size: 16,
-                            color: Colors.amber,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${user['reputation_score'] ?? 0.0}',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
+                      // Cập nhật hiển thị điểm uy tín thành nút có thể nhấn
+                      InkWell(
+                        onTap: () => _showRatingDialog(user),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.amber.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.amber.shade300,
+                              width: 1,
                             ),
                           ),
-                        ],
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.star,
+                                size: 16,
+                                color: Colors.amber,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${user['reputation_score'] ?? 0.0}',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.amber,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -997,6 +1203,50 @@ class _AdminUsersState extends State<AdminUsers> {
             // Nút thao tác
             Row(
               children: [
+                // Nút thay đổi trạng thái nhanh chóng
+                IconButton(
+                  icon: Icon(
+                    isActive
+                        ? Icons.block_outlined
+                        : Icons.check_circle_outline,
+                    color:
+                        isActive ? Colors.red.shade600 : Colors.green.shade600,
+                  ),
+                  tooltip:
+                      isActive ? 'Chặn người dùng' : 'Kích hoạt người dùng',
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: Text(isActive
+                            ? 'Chặn người dùng'
+                            : 'Kích hoạt người dùng'),
+                        content: Text(isActive
+                            ? 'Bạn có chắc chắn muốn chặn ${user['fullname']}? Người dùng sẽ không thể đăng nhập.'
+                            : 'Bạn có chắc chắn muốn kích hoạt ${user['fullname']}?'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('Hủy'),
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              _updateUserStatus(
+                                  user, isActive ? 'blocked' : 'active');
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor:
+                                  isActive ? Colors.red : Colors.green,
+                              foregroundColor: Colors.white,
+                            ),
+                            child: Text(isActive ? 'Chặn' : 'Kích hoạt'),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
                 IconButton(
                   icon: Icon(
                     Icons.edit_outlined,
