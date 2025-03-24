@@ -351,150 +351,272 @@ class _AdminBoardingHousesState extends State<AdminBoardingHouses> {
         final houseRating = house['rating'] ?? 0.0;
         final totalRooms = house['total_rooms'] ?? 0;
         final priceRange = house['price_range'] ?? '';
+        final houseImage = house['image'] ??
+            'https://i.imgur.com/JQRGsMs.jpg'; // Hình ảnh mặc định
+        final description = house['description'] ?? '';
+        final ownerName = house['owner_name'] ?? 'Không có thông tin';
 
         return Card(
-          elevation: 2,
-          margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+          elevation: 3,
+          margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            houseName,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            overflow: TextOverflow.ellipsis,
+                // Phần hình ảnh bên trái
+                ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(12),
+                    bottomLeft: Radius.circular(12),
+                  ),
+                  child: Image.network(
+                    houseImage,
+                    width: 150,
+                    height: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        width: 150,
+                        color: Colors.grey.shade200,
+                        child: const Center(
+                          child: Icon(
+                            Icons.image_not_supported,
+                            size: 50,
+                            color: Colors.grey,
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            houseAddress,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey.shade600,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.star,
-                          color: Colors.amber,
-                          size: 20,
                         ),
-                        const SizedBox(width: 4),
-                        Text(
-                          houseRating.toStringAsFixed(1),
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                      );
+                    },
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Container(
+                        width: 150,
+                        color: Colors.grey.shade100,
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            value: loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded /
+                                    loadingProgress.expectedTotalBytes!
+                                : null,
                           ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                // Phần thông tin bên phải
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Phần tiêu đề và đánh giá
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    houseName,
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    houseAddress,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.amber.shade100,
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.star,
+                                    color: Colors.amber,
+                                    size: 18,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    houseRating.toStringAsFixed(1),
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Phần mô tả ngắn
+                        Text(
+                          description,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey.shade800,
+                            height: 1.3,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Thông tin bổ sung
+                        Row(
+                          children: [
+                            _buildInfoChip(
+                              Icons.person,
+                              ownerName,
+                              Colors.blue.shade100,
+                            ),
+                            const SizedBox(width: 8),
+                            _buildInfoChip(
+                              Icons.house,
+                              '$totalRooms phòng',
+                              Colors.green.shade100,
+                            ),
+                            const SizedBox(width: 8),
+                            _buildInfoChip(
+                              Icons.attach_money,
+                              priceRange,
+                              Colors.purple.shade100,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Phần nút thao tác
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.visibility, size: 20),
+                              color: Colors.blue,
+                              tooltip: 'Xem phòng',
+                              onPressed: () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Xem phòng của nhà trọ $houseName',
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.edit, size: 20),
+                              color: Colors.orange,
+                              tooltip: 'Chỉnh sửa',
+                              onPressed: () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Chỉnh sửa nhà trọ $houseName',
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete, size: 20),
+                              color: Colors.red,
+                              tooltip: 'Xóa',
+                              onPressed: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: const Text('Xác nhận xóa'),
+                                    content: Text(
+                                      'Bạn có chắc muốn xóa nhà trọ "$houseName"?',
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        child: const Text('Hủy'),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.pop(context);
+                                          _deleteBoardingHouse(houseId);
+                                        },
+                                        child: const Text(
+                                          'Xóa',
+                                          style: TextStyle(color: Colors.red),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.house,
-                      size: 16,
-                      color: Colors.blue.shade700,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '$totalRooms phòng',
-                      style: const TextStyle(fontSize: 14),
-                    ),
-                    const SizedBox(width: 16),
-                    Icon(
-                      Icons.attach_money,
-                      size: 16,
-                      color: Colors.green,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      priceRange,
-                      style: const TextStyle(fontSize: 14),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () {
-                        // TODO: Implement view rooms
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                              content:
-                                  Text('Xem phòng của nhà trọ $houseName')),
-                        );
-                      },
-                      child: const Text('Xem phòng'),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        // TODO: Implement edit
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                              content: Text('Chỉnh sửa nhà trọ $houseName')),
-                        );
-                      },
-                      child: const Text('Chỉnh sửa'),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('Xác nhận xóa'),
-                            content: Text(
-                                'Bạn có chắc muốn xóa nhà trọ "$houseName"?'),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context),
-                                child: const Text('Hủy'),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                  _deleteBoardingHouse(houseId);
-                                },
-                                child: const Text('Xóa',
-                                    style: TextStyle(color: Colors.red)),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                      child: const Text('Xóa',
-                          style: TextStyle(color: Colors.red)),
-                    ),
-                  ],
+                  ),
                 ),
               ],
             ),
           ),
         );
       },
+    );
+  }
+
+  Widget _buildInfoChip(IconData icon, String label, Color bgColor) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 14,
+            color: Colors.black87,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12,
+              color: Colors.black87,
+            ),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
     );
   }
 
@@ -512,6 +634,7 @@ class _AdminBoardingHousesState extends State<AdminBoardingHouses> {
         'created_at': '2023-12-10T05:32:19.000Z',
         'owner_id': 5,
         'owner_name': 'Nguyễn Văn A',
+        'image': 'https://i.imgur.com/JA32Y7k.jpg',
       },
       {
         'id': 2,
@@ -524,6 +647,7 @@ class _AdminBoardingHousesState extends State<AdminBoardingHouses> {
         'created_at': '2023-10-05T09:15:42.000Z',
         'owner_id': 8,
         'owner_name': 'Trần Thị B',
+        'image': 'https://i.imgur.com/pUECN7C.jpg',
       },
       {
         'id': 3,
@@ -536,6 +660,7 @@ class _AdminBoardingHousesState extends State<AdminBoardingHouses> {
         'created_at': '2024-01-15T14:30:00.000Z',
         'owner_id': 12,
         'owner_name': 'Phạm Văn C',
+        'image': 'https://i.imgur.com/rtsG5BA.jpg',
       },
       {
         'id': 4,
@@ -548,6 +673,7 @@ class _AdminBoardingHousesState extends State<AdminBoardingHouses> {
         'created_at': '2023-11-20T10:45:13.000Z',
         'owner_id': 15,
         'owner_name': 'Lê Thị D',
+        'image': 'https://i.imgur.com/HxlUCh7.jpg',
       },
       {
         'id': 5,
@@ -561,6 +687,7 @@ class _AdminBoardingHousesState extends State<AdminBoardingHouses> {
         'created_at': '2024-02-01T08:20:55.000Z',
         'owner_id': 18,
         'owner_name': 'Hoàng Văn E',
+        'image': 'https://i.imgur.com/9EYuBGP.jpg',
       },
     ];
   }
