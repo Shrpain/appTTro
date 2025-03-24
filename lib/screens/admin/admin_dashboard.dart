@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import 'admin_users.dart'; // Import trang quản lý người dùng
+import 'admin_boarding_houses.dart'; // Import trang quản lý phòng trọ
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({Key? key}) : super(key: key);
@@ -638,8 +639,7 @@ class _AdminDashboardState extends State<AdminDashboard>
       case 1:
         return const AdminUsers();
       case 2:
-        return const Center(
-            child: Text('Trang quản lý phòng trọ - Đang phát triển'));
+        return const AdminBoardingHouses();
       case 3:
         return const Center(
             child: Text('Trang quản lý báo cáo - Đang phát triển'));
