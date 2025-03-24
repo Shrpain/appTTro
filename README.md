@@ -2,6 +2,19 @@
 
 Ứng dụng mobile giúp sinh viên tìm kiếm và quản lý phòng trọ, kết nối với chủ trọ.
 
+## Cập nhật mới - Ver 1.2
+
+### Quản lý người dùng nâng cao
+- **Thêm quản lý trạng thái người dùng**: Admin có thể kích hoạt/khóa tài khoản người dùng (active/blocked)
+- **Thêm quản lý điểm uy tín**: Hỗ trợ đánh giá người dùng với thang điểm 0-5 sao
+- **Giao diện cập nhật thông tin người dùng**: Form chỉnh sửa thông tin đầy đủ với validation
+- **Hiển thị trạng thái**: Hiển thị trực quan người dùng bị chặn bằng icon và màu sắc
+
+### API Cải tiến
+- Cập nhật API quản lý người dùng hỗ trợ các trường mới: status, reputation_score
+- Bổ sung validation chặt chẽ cho dữ liệu đầu vào
+- Trả về thông tin người dùng đã cập nhật sau khi cập nhật thành công
+
 ## Tính năng chính
 
 ### Xác thực người dùng
@@ -116,6 +129,14 @@ lib/
 - POST /api/auth/login - Đăng nhập
 - POST /api/auth/register - Đăng ký
 - POST /api/auth/logout - Đăng xuất
+
+### Admin API
+- GET /api/admin/dashboard - Lấy thống kê tổng quan
+- GET /api/admin/users - Lấy danh sách người dùng
+- GET /api/admin/users/:id - Lấy thông tin người dùng
+- POST /api/admin/users - Tạo người dùng mới
+- PUT /api/admin/users/:id - Cập nhật thông tin người dùng (hỗ trợ status, reputation_score)
+- DELETE /api/admin/users/:id - Xóa người dùng
 
 ### Users
 - GET /api/users - Lấy danh sách người dùng

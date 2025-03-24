@@ -1,4 +1,5 @@
-CREATE DATABASE IF NOT EXISTS tim_tro_sinh_vien;
+DROP DATABASE IF EXISTS tim_tro_sinh_vien;
+CREATE DATABASE tim_tro_sinh_vien;
 USE tim_tro_sinh_vien;
 
 -- Bảng người dùng (Admin, Sinh viên, Chủ trọ)
@@ -11,7 +12,8 @@ CREATE TABLE users (
     role ENUM('admin', 'student', 'owner') NOT NULL,
     reputation_score FLOAT DEFAULT 0 CHECK (reputation_score >= 0 AND reputation_score <= 5),
     avatar VARCHAR(255) DEFAULT 'default_avatar.jpg',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status ENUM('active', 'blocked') NOT NULL DEFAULT 'active'
 );
 
 -- Bảng nhà trọ
@@ -22,7 +24,7 @@ CREATE TABLE boarding_houses (
     address VARCHAR(255) NOT NULL,
     description TEXT,
     total_rooms INT NOT NULL DEFAULT 0,
-    price_range VARCHAR(50) NOT NULL,  -- Ví dụ: "1.5 - 2.5 triệu"
+    price_range VARCHAR(50) NOT NULL,
     rating FLOAT DEFAULT 0 CHECK (rating >= 0 AND rating <= 5),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE
@@ -34,7 +36,7 @@ CREATE TABLE rooms (
     boarding_house_id INT NOT NULL,
     room_number VARCHAR(50) NOT NULL,
     price DOUBLE NOT NULL,
-    area DOUBLE NOT NULL,  -- Diện tích (m²)
+    area DOUBLE NOT NULL,
     is_available BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (boarding_house_id) REFERENCES boarding_houses(id) ON DELETE CASCADE
